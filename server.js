@@ -87,7 +87,10 @@ app.post("/send-trip-notification", async (req, res) => {
     const destination = String(trip.destination || trip.destinationAddress || "").trim();
     const motif = String(trip.motif || trip.serviceType || trip.panneType || "Course").trim();
     const phone = String(trip.phone || trip.clientPhone || trip.Phone || "").trim();
-    const body = [depart, destination].filter(Boolean).join(" -> ") || motif;
+    const price = String(trip.prix ?? trip.price ?? trip.commission ?? "").trim();
+    const bodyParts = [[depart, destination].filter(Boolean).join(" -> "), price ? `${price} DA` : "", phone]
+      .filter(Boolean);
+    const body = bodyParts.join(" | ") || motif;
 
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
@@ -98,7 +101,7 @@ app.post("/send-trip-notification", async (req, res) => {
       android: {
         priority: "high",
         notification: {
-          channelId: "trip_alerts",
+          channelId: "trip_alerts_depson",
           sound: "depson",
           priority: "high",
           defaultVibrateTimings: true,
@@ -115,7 +118,10 @@ app.post("/send-trip-notification", async (req, res) => {
         depart,
         destination,
         motif,
+        price,
+        prix: price,
         phone,
+        Phone: phone,
       },
     });
 
